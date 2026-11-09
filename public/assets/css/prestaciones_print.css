@@ -1,0 +1,130 @@
+/* /app_proyecto/public/assets/css/prestaciones_print.css */
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    font-family: Arial, sans-serif; 
+    font-size: 10px; 
+}
+body { 
+    background-color: #f0f2f5; 
+    padding: 20px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+}
+.receipt-container { 
+    background: #ffffff; 
+    width: 100%; 
+    max-width: 1100px; 
+    padding: 20px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+    color: #000; 
+    position: relative; 
+}
+.header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-start; 
+    margin-bottom: 10px; 
+    border-bottom: 2px solid #000; 
+    padding-bottom: 8px; 
+}
+.logo-section { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: flex-start; 
+    font-weight: bold; 
+}
+.logo-placeholder { 
+    color: #1e7e34; 
+    font-size: 22px; 
+    font-style: italic; 
+    line-height: 1; 
+    margin-bottom: 4px; 
+}
+.company-title { 
+    text-align: center; 
+    flex-grow: 1; 
+}
+.company-title h1 { 
+    font-size: 14px; 
+    font-weight: bold; 
+    letter-spacing: 1px; 
+}
+.company-title h2 { 
+    font-size: 13px; 
+    font-weight: bold; 
+    margin-top: 2px; 
+}
+.company-title h3 { 
+    font-size: 11px; 
+    font-weight: bold; 
+    margin-top: 2px; 
+}
+.right-header { 
+    text-align: right; 
+    font-weight: bold; 
+    font-size: 9px; 
+}
+
+.grid-info { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-bottom: 10px; 
+    font-size: 10px; 
+}
+.grid-info td { 
+    padding: 3px 5px; 
+    font-weight: bold; 
+}
+
+.main-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-top: 5px; 
+}
+.main-table th { 
+    background-color: #d9d9d9; 
+    color: #000; 
+    font-weight: bold; 
+    padding: 4px 3px; 
+    border: 1px solid #000; 
+    text-align: center; 
+    font-size: 9px; 
+}
+.main-table td { 
+    border: 1px solid #000; 
+    padding: 3px 4px; 
+    font-family: monospace; 
+    text-align: right; 
+    font-size: 9px; 
+}
+.main-table td.text-left { 
+    text-align: left; 
+    font-family: Arial, sans-serif; 
+}
+.bg-highlight { 
+    background-color: #d4edda; 
+}
+
+.footer-signatures { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-end; 
+    margin-top: 40px; 
+    padding: 0 30px; 
+}
+.signature-box { 
+    text-align: center; 
+    width: 220px; 
+}
+.signature-line { 
+    border-top: 1px solid #000; 
+    margin-bottom: 5px; 
+}
+
+@media print { 
+    body { background: white; padding: 0; } 
+    .receipt-container { box-shadow: none; border: none; padding: 0; } 
+}

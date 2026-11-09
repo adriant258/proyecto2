@@ -1,0 +1,10 @@
+Options -MultiViews
+RewriteEngine On
+
+# Si el archivo o directorio físico existe, sárvelo directamente
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# De lo contrario, redirige todo el tráfico a index.php
+RewriteRule ^ index.php [QSA,L]
