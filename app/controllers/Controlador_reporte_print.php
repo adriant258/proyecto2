@@ -17,18 +17,21 @@ class ControladorReportePrint
             exit('Acceso no autorizado');
         }
 
-        // Establecer la zona horaria aquí para todo el flujo
         date_default_timezone_set('America/Caracas');
 
         try {
             $database = new Database();
             $pdoRecibos = $database->getConnection('recibos');
 
-            $filtroPeriodo = $_GET['periodo'] ?? '';
-            $filtroBusqueda = trim($_GET['busqueda'] ?? '');
+            // Capturar los tres filtros prioritariamente desde POST o GET como respaldo
+            $filtroTipo = trim($_POST['tipo'] ?? $_GET['tipo'] ?? '');
+            $filtroPeriodo = trim($_POST['periodo'] ?? $_GET['periodo'] ?? '');
+            $filtroBusqueda = trim($_POST['busqueda'] ?? $_GET['busqueda'] ?? '');
 
             $modeloReportes = new ModeloReportes($pdoRecibos);
-            $listaReportes = $modeloReportes->obtenerReporteVisualizacion($filtroPeriodo, $filtroBusqueda);
+            
+            // Pasamos los tres parámetros al modelo
+            $listaReportes = $modeloReportes->obtenerReporteVisualizacion($filtroTipo, $filtroPeriodo, $filtroBusqueda);
 
             require_once __DIR__ . '/../views/vista_reporte_print.php';
 

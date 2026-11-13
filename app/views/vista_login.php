@@ -18,7 +18,7 @@ if (session_status() === PHP_SESSION_NONE) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 
- <body class="min-vh-100 d-flex align-items-center justify-content-center" style="background-color: #0b132b;">
+<body class="min-vh-100 d-flex align-items-center justify-content-center" style="background-color: #0b132b;">
 
 <div class="container" style="max-width: 420px;">
     
@@ -49,7 +49,7 @@ if (session_status() === PHP_SESSION_NONE) {
     <!-- Formulario de Registro -->
     <div id="registerForm" class="bg-white p-4 rounded-4 shadow d-none">
         <h2 class="text-center mb-4 text-dark h3">Crear Cuenta</h2>
-        <form action="../controllers/Controlador_login.php" method="POST">
+        <form action="<?= BASE_URL ?>registro" method="POST">
             <div class="mb-3">
                 <label for="regUser" class="form-label text-secondary fw-semibold">Elige un Nombre de Usuario</label>
                 <input type="text" class="form-control" id="regUser" name="nombre" required placeholder="Ej: Carlos95">
@@ -90,119 +90,91 @@ if (session_status() === PHP_SESSION_NONE) {
 
 </div>
 
-    <!-- Bootstrap JS -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- Código JavaScript -->
+    <!-- LECTOR DE ALERTAS SWEETALERT (DESDE SESSION / URL) -->
+    <?php if (isset($_SESSION['swal'])): ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: '<?php echo $_SESSION['swal']['icon']; ?>',
+                    title: '<?php echo $_SESSION['swal']['title']; ?>',
+                    text: '<?php echo $_SESSION['swal']['text']; ?>',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Aceptar'
+                });
+            });
+        </script>
+        <?php unset($_SESSION['swal']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['error']) || isset($_GET['registro'])): ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const urlParams = new URLSearchParams(window.location.search);
+                const error = urlParams.get('error');
+                const registro = urlParams.get('registro');
+
+                if (error) {
+                    let titulo = '¡Atención!';
+                    let texto = 'Ocurrió un error en el proceso.';
+                    let icono = 'error';
+
+                    if (error === 'campos_vacios') {
+                        titulo = 'Campos vacíos';
+                        texto = 'Por favor, completa todos los campos obligatorios.';
+                    } else if (error === 'email_invalido') {
+                        titulo = 'Correo inválido';
+                        texto = 'El formato del correo electrónico no es válido.';
+                    } else if (error === 'nombre_invalido') {
+                        titulo = 'Nombre inválido';
+                        texto = '<?php echo $_SESSION['error_msg'] ?? "El nombre contiene caracteres no permitidos."; unset($_SESSION['error_msg']); ?>';
+                    } else if (error === 'password_debil') {
+                        titulo = 'Contraseña insegura';
+                        texto = '<?php echo $_SESSION['error_msg'] ?? "La contraseña no cumple con los requisitos mínimos de seguridad."; unset($_SESSION['error_msg']); ?>';
+                    } else if (error === 'passwords_no_coinciden') {
+                        titulo = 'Error de contraseñas';
+                        texto = 'Las contraseñas ingresadas no coinciden.';
+                    } else if (error === 'usuario_duplicado') {
+                        titulo = 'Usuario existente';
+                        texto = 'Ya existe un usuario registrado con este correo o cédula.';
+                    } else if (error === 'credenciales_incorrectas') {
+                        titulo = 'Acceso denegado';
+                        texto = 'Correo, usuario o contraseña incorrectos.';
+                    } else if (error === 'cuenta_bloqueada') {
+                        titulo = '¡Cuenta Bloqueada!';
+                        const minutos = urlParams.get('minutos') || '1';
+                        texto = `Demasiados intentos fallidos. Por favor, intente nuevamente en ${minutos} minuto(s).`;
+                        icono = 'warning';
+                    }
+
+                    Swal.fire({
+                        icon: icono,
+                        title: titulo,
+                        text: texto,
+                        confirmButtonColor: '#d33'
+                    });
+                }
+
+                if (registro === 'exito') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Registro exitoso!',
+                        text: 'Tu cuenta ha sido creada correctamente. Ya puedes iniciar sesión.',
+                        confirmButtonColor: '#28a745'
+                    });
+                }
+            });
+        </script>
+    <?php endif; ?>
+
     <script>
-      function setupPasswordToggle(inputId, iconId) {
-          const input = document.querySelector(`#${inputId}`);
-          const icon = document.querySelector(`#${iconId}`);
-
-          if (input && icon) {
-              icon.addEventListener('click', function () {
-                  const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                  input.setAttribute('type', type);
-                  this.classList.toggle('fa-eye');
-                  this.classList.toggle('fa-eye-slash');
-              });
-          }
-      }
-
-      setupPasswordToggle('loginPass', 'togglePass');
-      setupPasswordToggle('regPass', 'toggleRegPass');
-      setupPasswordToggle('regConfirmPass', 'toggleRegConfirmPass');
-
-      const loginForm = document.getElementById('loginForm');
-      const registerForm = document.getElementById('registerForm');
-      const showRegister = document.getElementById('showRegister');
-      const showLogin = document.getElementById('showLogin');
-
-      showRegister.addEventListener('click', (e) => {
-          e.preventDefault();
-          loginForm.classList.add('d-none');
-          registerForm.classList.remove('d-none');
-      });
-
-      showLogin.addEventListener('click', (e) => {
-          e.preventDefault();
-          registerForm.classList.add('d-none');
-          loginForm.classList.remove('d-none');
-      });
-
-      // ==========================================
-      // MANEJO DE ALERTAS CON SWEETALERT2
-      // ==========================================
-      document.addEventListener('DOMContentLoaded', function() {
-          // 1. Alertas provenientes de la sesión (ej. SecurityTrait)
-          <?php if (isset($_SESSION['swal'])): ?>
-              Swal.fire({
-                  icon: '<?php echo $_SESSION['swal']['icon']; ?>',
-                  title: '<?php echo $_SESSION['swal']['title']; ?>',
-                  text: '<?php echo $_SESSION['swal']['text']; ?>',
-                  confirmButtonColor: '#3085d6',
-                  confirmButtonText: 'Aceptar'
-              });
-              <?php unset($_SESSION['swal']); ?>
-          <?php endif; ?>
-
-          // 2. Alertas provenientes de los parámetros GET en la URL
-          const urlParams = new URLSearchParams(window.location.search);
-          const error = urlParams.get('error');
-          const registro = urlParams.get('registro');
-
-          if (error) {
-              let titulo = '¡Atención!';
-              let texto = 'Ocurrió un error en el proceso.';
-              let icono = 'error';
-
-              if (error === 'campos_vacios') {
-                  titulo = 'Campos vacíos';
-                  texto = 'Por favor, completa todos los campos obligatorios.';
-              } else if (error === 'email_invalido') {
-                  titulo = 'Correo inválido';
-                  texto = 'El formato del correo electrónico no es válido.';
-              } else if (error === 'nombre_invalido') {
-                  titulo = 'Nombre inválido';
-                  texto = '<?php echo $_SESSION['error_msg'] ?? "El nombre contiene caracteres no permitidos."; unset($_SESSION['error_msg']); ?>';
-              } else if (error === 'password_debil') {
-                  titulo = 'Contraseña insegura';
-                  texto = '<?php echo $_SESSION['error_msg'] ?? "La contraseña no cumple con los requisitos mínimos de seguridad."; unset($_SESSION['error_msg']); ?>';
-              } else if (error === 'passwords_no_coinciden') {
-                  titulo = 'Error de contraseñas';
-                  texto = 'Las contraseñas ingresadas no coinciden.';
-              } else if (error === 'usuario_duplicado') {
-                  titulo = 'Usuario existente';
-                  texto = 'Ya existe un usuario registrado con este correo o cédula.';
-              } else if (error === 'credenciales_incorrectas') {
-                  titulo = 'Acceso denegado';
-                  texto = 'Correo, usuario o contraseña incorrectos.';
-              } else if (error === 'cuenta_bloqueada') {
-                  titulo = '¡Cuenta Bloqueada!';
-                  const minutos = urlParams.get('minutos') || '1';
-                  texto = `Demasiados intentos fallidos. Por favor, intente nuevamente en ${minutos} minuto(s).`;
-                  icono = 'warning';
-              }
-
-              Swal.fire({
-                  icon: icono,
-                  title: titulo,
-                  text: texto,
-                  confirmButtonColor: '#d33'
-              });
-          }
-
-          if (registro === 'exito') {
-              Swal.fire({
-                  icon: 'success',
-                  title: '¡Registro exitoso!',
-                  text: 'Tu cuenta ha sido creada correctamente. Ya puedes iniciar sesión.',
-                  confirmButtonColor: '#28a745'
-              });
-          }
-      });
+        // Definimos BASE_URL global para JavaScript de forma dinámica
+        const BASE_URL = '<?php echo BASE_URL; ?>';
     </script>
+    <!-- Archivo JS externo de login -->
+    <script src="<?php echo BASE_URL; ?>assets/js/login.js"></script>
 </body>
 </html>

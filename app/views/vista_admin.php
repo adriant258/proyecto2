@@ -132,9 +132,15 @@ $totalAdmins       = $totalAdmins ?? 0;
 <?php elseif ($moduloActual === 'recibos'): ?>
 <!-- ========== MÓDULO 2: RECIBOS ========== -->
 <section class="vista activa">
-  <div class="mb-3">
-    <h3 class="mb-0">Todos los recibos</h3>
-    <small class="text-muted">Consulta y administra todos los pagos registrados en el sistema</small>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h3 class="mb-0">Todos los recibos</h3>
+      <small class="text-muted">Consulta y administra todos los pagos registrados en el sistema</small>
+    </div>
+    <!-- Botón para abrir el Modal de Importación Excel -->
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCargarExcel">
+      <i class="fas fa-file-excel me-1"></i> Cargar Recibos (Excel)
+    </button>
   </div>
 
   <!-- Barra de Filtros de Búsqueda -->
@@ -223,7 +229,7 @@ $totalAdmins       = $totalAdmins ?? 0;
                                     data-cedula="<?php echo htmlspecialchars($recibo['cedula'] ?? ''); ?>"
                                     data-tipo="<?php echo htmlspecialchars($recibo['tipo'] ?? 'recibo'); ?>"
                                     onclick="verRecibo(this.dataset.recibo, this.dataset.cedula, this.dataset.tipo)">
-                                    <i class="fas fa-eye me-1"></i> Visualizar
+                                <i class="fas fa-eye me-1"></i> Visualizar
                             </button>
                             
                             <!-- Botón Descargar PDF -->
@@ -232,7 +238,7 @@ $totalAdmins       = $totalAdmins ?? 0;
                                     data-cedula="<?php echo htmlspecialchars($recibo['cedula'] ?? ''); ?>"
                                     data-tipo="<?php echo htmlspecialchars($recibo['tipo'] ?? 'recibo'); ?>"
                                     onclick="descargarReciboPDF(this.dataset.recibo, this.dataset.cedula, this.dataset.tipo)">
-                                    <i class="fas fa-file-pdf me-1"></i> Descargar PDF
+                                <i class="fas fa-file-pdf me-1"></i> Descargar PDF
                             </button>
                         </td>
                     </tr>
@@ -255,38 +261,57 @@ $totalAdmins       = $totalAdmins ?? 0;
     <small class="text-muted">Historial detallado de recibos consultados por los empleados</small>
   </div>
 
-<!-- Filtro por período, búsqueda y botón de impresión -->
+<!-- Filtros y botón de impresión -->
 <div class="card mb-3">
   <div class="card-body">
-    <form method="GET" action="" class="row g-3 align-items-end">
-      <input type="hidden" name="modulo" value="reportes">
+    <div class="row g-3 align-items-end">
       
-      <div class="col-md-4">
-       <label class="form-label small fw-semibold">Filtrar por Tipo de Pago</label>
-        <select name="tipo" class="form-select">
-          <option value="">Todos los tipos</option>
-           <option value="Recibo Regular" <?php echo (isset($_GET['tipo']) && $_GET['tipo'] === 'Recibo Regular') ? 'selected' : ''; ?>>Recibo Regular</option>
+      <!-- 1. Formulario principal para filtrar la vista (GET) con Tipo, Período y Búsqueda -->
+      <form method="GET" action="" class="col-md-9 row g-3 align-items-end m-0 p-0" id="formFiltroReporte">
+        <input type="hidden" name="modulo" value="reportes">
+        
+        <div class="col-md-3">
+          <label class="form-label small fw-semibold">Tipo de Pago</label>
+          <select name="tipo" class="form-select">
+            <option value="">Todos los tipos</option>
+            <option value="Recibo Regular" <?php echo (isset($_GET['tipo']) && $_GET['tipo'] === 'Recibo Regular') ? 'selected' : ''; ?>>Recibo Regular</option>
             <option value="Utilidades" <?php echo (isset($_GET['tipo']) && $_GET['tipo'] === 'Utilidades') ? 'selected' : ''; ?>>Utilidades</option>
-             <option value="Vacaciones" <?php echo (isset($_GET['tipo']) && $_GET['tipo'] === 'Vacaciones') ? 'selected' : ''; ?>>Vacaciones</option>
-              <option value="Prestaciones / Intereses" <?php echo (isset($_GET['tipo']) && $_GET['tipo'] === 'Prestaciones / Intereses') ? 'selected' : ''; ?>>Prestaciones / Intereses</option>
-              </select>
-      </div>
+            <option value="Vacaciones" <?php echo (isset($_GET['tipo']) && $_GET['tipo'] === 'Vacaciones') ? 'selected' : ''; ?>>Vacaciones</option>
+            <option value="Prestaciones / Intereses" <?php echo (isset($_GET['tipo']) && $_GET['tipo'] === 'Prestaciones / Intereses') ? 'selected' : ''; ?>>Prestaciones / Intereses</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label small fw-semibold">Período</label>
+          <input type="text" name="periodo" class="form-control" value="<?php echo htmlspecialchars($_GET['periodo'] ?? ''); ?>" placeholder="Ej: Período 40">
+        </div>
+        
+        <div class="col-md-3">
+          <label class="form-label small fw-semibold">Cédula o Usuario</label>
+          <input type="text" name="busqueda" class="form-control" value="<?php echo htmlspecialchars($_GET['busqueda'] ?? ''); ?>" placeholder="Cédula o nombre">
+        </div>
+
+        <div class="col-md-3">
+          <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search me-1"></i>Filtrar</button>
+        </div>
+      </form>
+
+      <!-- 2. Formulario independiente para imprimir por POST incluyendo el nuevo campo de período -->
       <div class="col-md-3">
-        <label class="form-label small fw-semibold">Buscar por Cédula o Usuario</label>
-        <input type="text" name="busqueda" class="form-control" value="<?php echo htmlspecialchars($filtroBusqueda ?? ''); ?>" placeholder="Cédula o nombre">
+        <label class="form-label small fw-semibold text-muted d-none d-md-block">&nbsp;</label>
+        <form action="<?= BASE_URL ?>reportes" method="POST" target="_blank">
+          <input type="hidden" name="accion" value="imprimir">
+          <input type="hidden" name="tipo" value="<?php echo htmlspecialchars($_GET['tipo'] ?? ''); ?>">
+          <input type="hidden" name="periodo" value="<?php echo htmlspecialchars($_GET['periodo'] ?? ''); ?>">
+          <input type="hidden" name="busqueda" value="<?php echo htmlspecialchars($_GET['busqueda'] ?? ''); ?>">
+          
+          <button type="submit" class="btn btn-secondary w-100">
+            <i class="fas fa-print me-1"></i>Imprimir PDF
+          </button>
+        </form>
       </div>
 
-      <div class="col-md-2">
-        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search me-1"></i>Filtrar</button>
-      </div>
-
-      <div class="col-md-3">
-        <!-- Enlace actualizado apuntando al Controlador MVC -->
-        <a href="<?= BASE_URL ?>reportes?periodo=<?php echo urlencode($filtroPeriodo); ?>&busqueda=<?php echo urlencode($filtroBusqueda ?? ''); ?>" target="_blank" class="btn btn-secondary w-100">
-        <i class="fas fa-print me-1"></i>Imprimir PDF
-       </a>
-      </div>
-    </form>
+    </div>
   </div>
 </div>
 
@@ -329,6 +354,33 @@ $totalAdmins       = $totalAdmins ?? 0;
 <?php endif; ?>
 
 </main>
+<!-- ============ MODAL: CARGAR RECIBOS DESDE EXCEL ============ -->
+<div class="modal fade" id="modalCargarExcel" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form id="formCargarExcel" class="modal-content" enctype="multipart/form-data">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="fas fa-file-excel me-2"></i>Importar Recibos de Pago</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Archivo Excel (.xlsx o .xls)</label>
+          <input type="file" class="form-control" name="archivo_excel" id="archivoExcel" accept=".xlsx, .xls, .csv" required>
+          <div class="form-text">Asegúrate de que las columnas coincidan con el formato requerido.</div>
+        </div>
+        <div class="alert alert-info small mb-0">
+          <i class="fas fa-info-circle me-1"></i> Puedes descargar una <a href="../public/assets/plantillas/plantilla_maestra_ajeven.xlsx" download>plantilla de ejemplo aquí</a>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-success" id="btnSubirExcel">
+          <i class="fas fa-upload me-1"></i> Procesar e Importar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- ============ MODAL: CREAR / EDITAR USUARIO ============ -->
 <div class="modal fade" id="modalUsuario" tabindex="-1">
@@ -364,176 +416,13 @@ $totalAdmins       = $totalAdmins ?? 0;
   </div>
 </div>
 
+<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// Definimos BASE_URL global para JavaScript de forma dinámica
-const BASE_URL = '<?php echo BASE_URL; ?>';
-
-// Funcionalidad para ocultar/mostrar el panel lateral
-document.getElementById('btnSidebar').onclick = () => {
-    document.body.classList.toggle('sb-hidden');
-};
-
-function prepararCreacion() {
-    document.getElementById('tituloModal').textContent = 'Nuevo usuario';
-    document.getElementById('uId').value = '';
-    document.getElementById('uUsuario').value = '';
-    document.getElementById('uCedula').value = '';
-    document.getElementById('uEmail').value = '';
-    document.getElementById('uRol').value = 'usuario';
-    document.getElementById('uEstado').value = 'activo';
-    document.getElementById('uPass').value = '';
-}
-
-function editarUsuario(u) {
-    document.getElementById('tituloModal').textContent = 'Editar usuario';
-    document.getElementById('uId').value = u.id;
-    document.getElementById('uUsuario').value = u.usuario;
-    document.getElementById('uCedula').value = u.cedula;
-    document.getElementById('uEmail').value = u.email;
-    document.getElementById('uRol').value = u.rol;
-    document.getElementById('uEstado').value = u.estado;
-    document.getElementById('uPass').value = ''; 
-    
-    var modal = new bootstrap.Modal(document.getElementById('modalUsuario'));
-    modal.show();
-}
-
-// Lógica de filtrado en tiempo real para la tabla de recibos
-function filtrarTablaRecibos() {
-    const tipoFiltro = document.getElementById('filtroTipo').value.toLowerCase();
-    const periodoFiltro = document.getElementById('filtroPeriodoInput').value.toLowerCase();
-    const textoFiltro = document.getElementById('filtroTexto').value.toLowerCase();
-    
-    const filas = document.querySelectorAll('#tablaCuerpo tr:not(#filaVacia):not(#filaVaciaBusqueda)');
-    let visibles = 0;
-
-    filas.forEach(fila => {
-        const cedula = fila.cells[0]?.textContent.toLowerCase() || '';
-        const trabajador = fila.cells[1]?.textContent.toLowerCase() || '';
-        const tipo = fila.cells[3]?.textContent.toLowerCase() || '';
-        const periodo = fila.cells[4]?.textContent.toLowerCase() || '';
-
-        const matchTipo = tipoFiltro === '' || tipo.includes(tipoFiltro);
-        const matchPeriodo = periodoFiltro === '' || periodo.includes(periodoFiltro);
-        const matchTexto = textoFiltro === '' || cedula.includes(textoFiltro) || trabajador.includes(textoFiltro);
-
-        if (matchTipo && matchPeriodo && matchTexto) {
-            fila.style.display = '';
-            visibles++;
-        } else {
-            fila.style.display = 'none';
-        }
-    });
-
-    const filaVaciaBusqueda = document.getElementById('filaVaciaBusqueda');
-    if (filaVaciaBusqueda) {
-        filaVaciaBusqueda.style.display = visibles === 0 ? '' : 'none';
-    }
-}
-
-function limpiarFiltrosRecibos() {
-    document.getElementById('filtroTipo').value = '';
-    document.getElementById('filtroPeriodoInput').value = '';
-    document.getElementById('filtroTexto').value = '';
-    filtrarTablaRecibos();
-}
-
-// ==========================================
-// FUNCIONES SEGURAS PARA RECIBOS (ADMIN)
-// ==========================================
-function verRecibo(reciboNo, cedula, tipoDoc) {
-    if (!cedula) { alert('No se encontró la cédula del usuario.'); return; }
-    
-    let moduloDestino = 'recibos';
-    let tipoLower = (tipoDoc || '').toLowerCase();
-
-    if (tipoLower.includes('vacacion')) moduloDestino = 'vacaciones';
-    else if (tipoLower.includes('utilidad')) moduloDestino = 'utilidades';
-    else if (tipoLower.includes('prestacion')) moduloDestino = 'prestaciones';
-
-    fetch(`${BASE_URL}${moduloDestino}/preparar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `recibo_no=${encodeURIComponent(reciboNo)}&cedula=${encodeURIComponent(cedula)}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'ok') {
-            window.open(`${BASE_URL}${moduloDestino}`, '_blank');
-        } else {
-            alert('Error al preparar la visualización del recibo.');
-        }
-    })
-    .catch(() => alert('Error de conexión con el servidor.'));
-}
-
-function descargarReciboPDF(reciboNo, cedula, tipoDoc) {
-    if (!cedula) { alert('No se encontró la cédula del usuario.'); return; }
-    
-    let moduloDestino = 'recibos';
-    let tipoLower = (tipoDoc || '').toLowerCase();
-
-    if (tipoLower.includes('vacacion')) moduloDestino = 'vacaciones';
-    else if (tipoLower.includes('utilidad')) moduloDestino = 'utilidades';
-    else if (tipoLower.includes('prestacion')) moduloDestino = 'prestaciones';
-
-    fetch(`${BASE_URL}${moduloDestino}/preparar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `recibo_no=${encodeURIComponent(reciboNo)}&cedula=${encodeURIComponent(cedula)}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'ok') {
-            window.open(`${BASE_URL}${moduloDestino}?auto=1`, '_blank');
-        } else {
-            alert('Error al preparar la descarga del recibo.');
-        }
-    })
-    .catch(() => alert('Error de conexión con el servidor.'));
-}
-
-// ==========================================
-// CONTROL DE INACTIVIDAD Y SESIÓN (ADMIN)
-// ==========================================
-const TIEMPO_LIMITE = 15 * 60 * 1000; // 15 minutos en milisegundos
-let temporizadorInactividad;
-
-function reiniciarTemporizador() {
-    clearTimeout(temporizadorInactividad);
-    temporizadorInactividad = setTimeout(mostrarAlertaInactividad, TIEMPO_LIMITE);
-}
-
-function mostrarAlertaInactividad() {
-    Swal.fire({
-        title: '¡Sesión a punto de expirar!',
-        text: 'Has estado inactivo por un tiempo. ¿Deseas continuar en la sesión o cerrarla?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Continuar sesión',
-        cancelButtonText: 'Cerrar sesión',
-        confirmButtonColor: '#2f80ed',
-        cancelButtonColor: '#d33',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        timer: 30000,
-        timerProgressBar: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            reiniciarTemporizador();
-            fetch(BASE_URL + '?route=api/renovar-sesion').catch(() => {});
-        } else {
-            window.location.href = BASE_URL + 'logout';
-        }
-    });
-}
-
-window.onload = reiniciarTemporizador;
-window.onmousemove = reiniciarTemporizador;
-window.onkeypress = reiniciarTemporizador;
-window.onclick = reiniciarTemporizador;
-window.onscroll = reiniciarTemporizador;
+    // Definimos BASE_URL global para JavaScript de forma dinámica antes de cargar el script externo
+    const BASE_URL = '<?php echo BASE_URL; ?>';
 </script>
+<!-- Archivo JS externo para el panel de administración -->
+<script src="<?php echo BASE_URL; ?>assets/js/admin.js"></script>
 </body>
 </html>

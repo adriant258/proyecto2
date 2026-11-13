@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 29-10-2026 a las 14:49:17
+-- Tiempo de generación: 13-11-2026 a las 20:05:16
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -45,11 +45,11 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `usuario`, `cedula`, `email`, `password`, `rol`, `intentos_fallidos`, `bloqueado_hasta`, `ultimo_login`, `creado_en`) VALUES
-(1, 'admin', '00000000', 'admin@ajeven.com', '$2y$10$KpFJAxVpk6vAj6UOOUdjfOB0AhZ0B6bWVXvU2C5CysGq5m7uXRiE6', 'admin', 0, NULL, '2026-10-29 09:13:11', '2026-10-18 14:35:07'),
-(3, 'AdrianTovar', '22432749', 'adrian.informatico25@gmail.com', '$2y$10$BSmVTjBkmQLpHCQbCHp/Te0IiFmC3.81hzSW0Lb68gi4np4hAzXMW', 'usuario', 0, NULL, '2026-10-29 09:08:58', '2026-10-20 22:19:23'),
-(4, 'YandeivisGallardo', '22000724', 'Yandeivis@gmail.com', '$2y$10$MHe0uBj3SSlNj5cdUtDRIelp3CXkrmmWFvp7VN.K1.dVbw/ovE7b2', 'usuario', 0, NULL, NULL, '2026-10-22 20:23:54'),
-(5, 'JosueNieves', '30251967', 'Josue@gmail.com', '$2y$10$lYAIZGAH/Kh4CiX0TZpjB.C9EZWmVbp//abMze/6QozXtaAiJSHH.', 'usuario', 3, '2026-10-26 22:58:22', NULL, '2026-10-26 21:23:48'),
-(6, 'juanperez', '987654321', 'juan.perez@gmail.com', '$2y$10$eBJtblUTFSkgf2GQ0fkPfu30fN2SDT6f9VgHIvuOCTlsfyyy9T3AG', 'usuario', 0, NULL, NULL, '2026-10-28 03:14:51');
+(1, 'admin', '00000000', 'admin@ajeven.com', '$2y$10$KpFJAxVpk6vAj6UOOUdjfOB0AhZ0B6bWVXvU2C5CysGq5m7uXRiE6', 'admin', 0, NULL, '2026-11-13 14:02:38', '2026-10-18 14:35:07'),
+(3, 'AdrianTovar', '22432749', 'adrian.informatico25@gmail.com', '$2y$10$BSmVTjBkmQLpHCQbCHp/Te0IiFmC3.81hzSW0Lb68gi4np4hAzXMW', 'usuario', 0, NULL, '2026-11-13 00:17:44', '2026-10-20 22:19:23'),
+(4, 'YandeivisGallardo', '22000724', 'Yandeivis@gmail.com', '$2y$10$MHe0uBj3SSlNj5cdUtDRIelp3CXkrmmWFvp7VN.K1.dVbw/ovE7b2', 'usuario', 3, '2026-10-31 13:21:06', NULL, '2026-10-22 20:23:54'),
+(5, 'JosueNieves', '30251967', 'Josue@gmail.com', '$2y$10$lYAIZGAH/Kh4CiX0TZpjB.C9EZWmVbp//abMze/6QozXtaAiJSHH.', 'usuario', 4, '2026-10-31 13:20:25', NULL, '2026-10-26 21:23:48'),
+(6, 'Juanperez', '987654321', 'juan.perez@gmail.com', '$2y$10$eBJtblUTFSkgf2GQ0fkPfu30fN2SDT6f9VgHIvuOCTlsfyyy9T3AG', 'usuario', 0, NULL, NULL, '2026-10-28 03:14:51');
 
 --
 -- Índices para tablas volcadas

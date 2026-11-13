@@ -12,12 +12,18 @@ class ControladorAdmin
         }
 
         require_once __DIR__ . '/../../config/Database.php';
+        require_once __DIR__ . '/../models/Modelo_Usuarios.php';
         require_once __DIR__ . '/../models/Modelo_Recibos.php';
         require_once __DIR__ . '/../models/Modelo_reportes.php';
 
         $database = new Database();
         $pdo = $database->getConnection('default');
         $pdoRecibos = $database->getConnection('recibos');
+
+        // Instanciar modelos
+        $modeloUsuarios = new ModeloUsuarios($pdo);
+        $modeloRecibos  = new ModeloRecibos($pdoRecibos);
+        $modeloReportes = new ModeloReportes($pdoRecibos);
 
         // ==========================================
         // PROCESAR PETICIONES POST (CREAR, EDITAR, ELIMINAR)
@@ -40,35 +46,18 @@ class ControladorAdmin
                         exit;
                     }
 
-                    if ($id > 0) {
-                        if (!empty($password)) {
-                            $passHash = password_hash($password, PASSWORD_DEFAULT);
-                            $sql = "UPDATE usuarios SET usuario = ?, cedula = ?, email = ?, rol = ?, password = ?, intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = ?";
-                            $stmt = $pdo->prepare($sql);
-                            $stmt->execute([$usuario, $cedula, $email, $rol, $passHash, $id]);
-                        } else {
-                            $sql = "UPDATE usuarios SET usuario = ?, cedula = ?, email = ?, rol = ? WHERE id = ?";
-                            $stmt = $pdo->prepare($sql);
-                            $stmt->execute([$usuario, $cedula, $email, $rol, $id]);
-                        }
-                    } else {
-                        if (empty($password)) {
-                            header('Location: ' . BASE_URL . 'admin?error=La contraseña es obligatoria');
-                            exit;
-                        }
-                        $passHash = password_hash($password, PASSWORD_DEFAULT);
-                        $sql = "INSERT INTO usuarios (usuario, cedula, email, rol, password, creado_en) VALUES (?, ?, ?, ?, ?, NOW())";
-                        $stmt = $pdo->prepare($sql);
-                        $stmt->execute([$usuario, $cedula, $email, $rol, $passHash]);
+                    if ($id === 0 && empty($password)) {
+                        header('Location: ' . BASE_URL . 'admin?error=La contraseña es obligatoria');
+                        exit;
                     }
+
+                    // Delegamos la operación al modelo de usuarios
+                    $modeloUsuarios->guardar($id, $usuario, $cedula, $email, $rol, $estado, $password);
                 }
 
                 if ($accion === 'eliminar') {
                     $id = intval($_POST['id'] ?? 0);
-                    if ($id > 1) {
-                        $stmt = $pdo->prepare("DELETE FROM usuarios WHERE id = ?");
-                        $stmt->execute([$id]);
-                    }
+                    $modeloUsuarios->eliminar($id);
                 }
             } catch (Exception $e) {
                 // Manejo de errores silencioso en POST
@@ -83,36 +72,24 @@ class ControladorAdmin
         // ==========================================
         try {
             $moduloActual   = $_GET['modulo'] ?? 'usuarios';
-            $filtroTipo     = $_GET['tipo'] ?? ''; // Cambiado de periodo a tipo
+            $filtroTipo     = trim($_GET['tipo'] ?? '');
+            $filtroPeriodo  = trim($_GET['periodo'] ?? ''); // <--- Capturamos el filtro de período
             $filtroBusqueda = trim($_GET['busqueda'] ?? '');
 
-            // 1. Obtención de Recibos mediante su Modelo
-            $modeloRecibos = new ModeloRecibos($pdoRecibos);
+            // 1. Obtención de Recibos
             $listaRecibos = $modeloRecibos->obtenerTodosLosRecibos() ?? [];
 
-            // 2. Obtención de Usuarios
-            $stmtU = $pdo->query("
-                SELECT 
-                    id, usuario, cedula, email, rol, 
-                    creado_en AS creado, 
-                    CASE 
-                        WHEN bloqueado_hasta IS NOT NULL AND bloqueado_hasta > NOW() THEN 'bloqueado'
-                        ELSE 'activo'
-                    END AS estado 
-                FROM usuarios 
-                ORDER BY id ASC
-            ");
-            $usuariosIniciales = $stmtU->fetchAll(PDO::FETCH_ASSOC) ?? [];
+            // 2. Obtención de Usuarios a través del Modelo
+            $usuariosIniciales = $modeloUsuarios->obtenerTodos();
 
             // Estadísticas para tarjetas
-            $totalUsuarios = count($usuariosIniciales);
-            $totalActivos = count(array_filter($usuariosIniciales, fn($u) => $u['estado'] === 'activo'));
-            $totalBloqueados = count(array_filter($usuariosIniciales, fn($u) => $u['estado'] !== 'activo'));
-            $totalAdmins = count(array_filter($usuariosIniciales, fn($u) => $u['rol'] === 'admin'));
+            $totalUsuarios    = count($usuariosIniciales);
+            $totalActivos     = count(array_filter($usuariosIniciales, fn($u) => $u['estado'] === 'activo'));
+            $totalBloqueados  = count(array_filter($usuariosIniciales, fn($u) => $u['estado'] !== 'activo'));
+            $totalAdmins      = count(array_filter($usuariosIniciales, fn($u) => $u['rol'] === 'admin'));
 
-            // 3. Obtención de Reportes mediante el Modelo dedicado (filtrando por tipo)
-            $modeloReportes = new ModeloReportes($pdoRecibos);
-            $listaReportes = $modeloReportes->obtenerReportes($filtroTipo, $filtroBusqueda);
+            // 3. Obtención de Reportes (filtrando por tipo, período y cédula/usuario)
+            $listaReportes = $modeloReportes->obtenerReporteVisualizacion($filtroTipo, $filtroPeriodo, $filtroBusqueda);
 
             $nombreUsuario = $_SESSION['usuario_nombre'] ?? 'Administrador';
 

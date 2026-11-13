@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 29-10-2026 a las 14:49:05
+-- Tiempo de generación: 13-11-2026 a las 20:04:54
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -69,18 +69,18 @@ CREATE TABLE `recibos` (
   `recibo_no` varchar(50) DEFAULT NULL,
   `periodo` varchar(50) DEFAULT NULL,
   `asignaciones_texto` text DEFAULT NULL,
-  `asignaciones_cant` varchar(50) DEFAULT NULL,
-  `asignaciones_monto` varchar(50) DEFAULT NULL,
+  `asignaciones_cant` text DEFAULT NULL,
+  `asignaciones_monto` text DEFAULT NULL,
   `deducciones_texto` text DEFAULT NULL,
-  `deducciones_cant` varchar(50) DEFAULT NULL,
-  `deducciones_monto` varchar(50) DEFAULT NULL,
-  `saldos_texto` varchar(50) DEFAULT NULL,
-  `total_asignaciones` varchar(50) DEFAULT NULL,
-  `total_deducciones` varchar(50) DEFAULT NULL,
+  `deducciones_cant` text DEFAULT NULL,
+  `deducciones_monto` text DEFAULT NULL,
+  `saldos_texto` text DEFAULT NULL,
+  `total_asignaciones` varchar(100) DEFAULT NULL,
+  `total_deducciones` varchar(100) DEFAULT NULL,
   `neto_letras` text DEFAULT NULL,
-  `neto_pagar` varchar(50) DEFAULT NULL,
-  `salarios_devengados` varchar(50) DEFAULT NULL,
-  `disponible_prestaciones` varchar(50) DEFAULT NULL,
+  `neto_pagar` varchar(100) DEFAULT NULL,
+  `salarios_devengados` varchar(100) DEFAULT NULL,
+  `disponible_prestaciones` varchar(100) DEFAULT NULL,
   `cuenta_bancaria` varchar(50) DEFAULT NULL,
   `fecha_visualizacion` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -90,7 +90,8 @@ CREATE TABLE `recibos` (
 --
 
 INSERT INTO `recibos` (`id`, `cedula`, `tipo`, `codigo`, `nombre`, `turno`, `cuadrilla`, `departamento`, `seccion`, `cargo`, `recibo_no`, `periodo`, `asignaciones_texto`, `asignaciones_cant`, `asignaciones_monto`, `deducciones_texto`, `deducciones_cant`, `deducciones_monto`, `saldos_texto`, `total_asignaciones`, `total_deducciones`, `neto_letras`, `neto_pagar`, `salarios_devengados`, `disponible_prestaciones`, `cuenta_bancaria`, `fecha_visualizacion`) VALUES
-(1, '22432749', '', 'EMP-184668', 'ADRIAN TOVAR', 'Rotativo', 'Cuadrilla A', 'Producción', 'Envasado', 'Operador de Planta', 'REC-2026-0038', 'Semana 38 (15/09/2026 - 22/09/2026)', 'Sueldo Base\nBono de Producción', '7\n1', '15000.00\n30.00', 'Seguro Social (IVSS)\nAhorro Habitacional', '1', '6\n1.00', '0.00', 'BS15000.00', 'BS6.00', 'SON: QUINCE MIL BOLIVARES EXACTOS', 'BS15000.00', 'BS15000.00', 'BS12850.00', '0102-1234-56-7890123456', '2026-10-28 00:22:23');
+(1, '22432749', '', 'EMP-184668', 'ADRIAN TOVAR', 'Rotativo', 'Cuadrilla A', 'Producción', 'Envasado', 'Operador de Planta', 'REC-2026-0038', 'Semana 38 (15/09/2026 - 22/09/2026)', 'Sueldo Base\nBono de Producción', '7\n1', '15000.00\n30.00', 'Seguro Social (IVSS)\nAhorro Habitacional', '1', '6\n1.00', '0.00', 'BS15000.00', 'BS6.00', 'SON: QUINCE MIL BOLIVARES EXACTOS', 'BS15000.00', 'BS15000.00', 'BS12850.00', '0102-1234-56-7890123456', '2026-10-28 00:22:23'),
+(4, '22432749', 'Nómina', '184668', 'ADRIAN TOVAR', 'ROTATIVO', 'GRUPO A', 'PRODUCCION', 'ENVASADO', 'OPERADOR DE PLANTA', '15', 'Período 40 del 28/09/2026 al 04/10/2026', 'HORAS COMPENSADAS | DIA ADICIONAL POR DOM.LABORADO | SALARIO | PROLONGACION NOCT. S/TURNO | DOMINGO PROMEDIO | PRIMA DE ASISTENCIA | BONO SALARIAL | BONO NOCTURNO | RECARGO DOM.TRAB.S/ART.88 RLOT | BONIFICACION ESPECIAL SALARIO* | DIAS LIBRES CONVENIDOS | SABADO PROMEDIO | TIEMPO DE VIAJE | TIEMPO DE VIAJE** | DESCANSO TRABAJADO NOCTURNO | TRABAJADO NOCTURNO 6TO DIA | DIA COMPENSADO 6TO DIA', '4 Horas | 1 Dias | 3 Dias | 2.5 Horas | 1 Dias | | | 12 Horas | 12 Horas | | 2 Dias | 1 Dias | 3 Dias | | 12 Horas | 12 Horas | 1 Dias', '551.73 | 1,009.54 | 802.02 | 668.11 | 6,726.53 | 4.00 | 34.15 | 1,002.08 | 2,243.26 | 2,396.24 | 1,636.60 | 5,543.84 | 210.46 | 140.31 | 6,588.31 | 6,588.31 | 2,111.64', 'SEGURO SOCIAL OBLIGATORIO | LRPE | RETENCION FAOV | RETENCION DE I.S.L.R. | CUOTA SINDICAL', '4% | .5% | 1% | | .8%', '6.00 | 1.50 | 382.57 | 11.48 | 306.06', '| | 1,147.71 | | ', '38257.12999999999738', '707.61000000000001', 'Son Treinta Y Siete Mil Quinientos Cuarenta Y Nueve Con 52/100', '37549.5199999999968', '476427.92999999999302', '109892.10000000000582', '01050121101121138446', '2026-11-13 00:17:44');
 
 -- --------------------------------------------------------
 
@@ -256,7 +257,7 @@ ALTER TABLE `intereses_prestaciones`
 --
 ALTER TABLE `recibos`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `cedula` (`cedula`);
+  ADD UNIQUE KEY `idx_recibo_no` (`recibo_no`);
 
 --
 -- Indices de la tabla `utilidades`
@@ -300,7 +301,7 @@ ALTER TABLE `intereses_prestaciones`
 -- AUTO_INCREMENT de la tabla `recibos`
 --
 ALTER TABLE `recibos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `utilidades`

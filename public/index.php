@@ -1,6 +1,7 @@
 <?php
 // public/index.php
 // Front Controller principal del sistema Ajeven
+require_once __DIR__ . '/../vendor/autoload.php';
 
 // 1. Configurar la cookie de sesión para que expire al cerrar el navegador
 session_set_cookie_params([
@@ -19,10 +20,10 @@ $scriptDir = rtrim(dirname($scriptName), '/');
 $baseUrl = ($scriptDir === '/' || $scriptDir === '') ? '/' : $scriptDir . '/';
 define('BASE_URL', $baseUrl);
 
-// 3. Control de tiempo de inactividad en el servidor (Ejemplo: 15 minutos = 900 segundos)
+// 3. Control de tiempo de inactividad en el servidor (10 minutos = 600 segundos)
 $uriActual = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 if (strpos($uriActual, 'login') === false && isset($_SESSION['usuario_rol'])) {
-    $tiempo_limite_inactividad = 15 * 60; 
+    $tiempo_limite_inactividad = 10 * 60; // 10 minutos exactos
 
     if (isset($_SESSION['ultimo_acceso'])) {
         $inactivo = time() - $_SESSION['ultimo_acceso'];
@@ -60,14 +61,20 @@ if (isset($segmentos[1]) && $segmentos[1] === 'preparar' && $_SERVER['REQUEST_ME
 
 // 6. Obtención y limpieza de la URI
 $modulo = $segmentos[0] ?? '';
-$accion = $segmentos[1] ?? '';
+$accionCruda = $segmentos[1] ?? '';
 
-// Si es una petición POST al login sin acción explícita, redirigir al método procesar
-if ($modulo === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST' && empty($accion)) {
-    $accion = 'procesar';
+// Definir la acción por defecto según el módulo
+if ($modulo === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST' && empty($accionCruda)) {
+    $accionCruda = 'procesar';
+} elseif ($modulo === 'logout') {
+    $modulo = 'login';
+    $accionCruda = 'logout';
 } else {
-    $accion = $accion !== '' ? $accion : 'index';
+    $accionCruda = $accionCruda !== '' ? $accionCruda : 'index';
 }
+
+// Conversión inteligente: Transforma "importar-excel" o "importar_excel" en "importarExcel"
+$accion = lcfirst(str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $accionCruda))));
 
 // Guardar ID u otros parámetros si existen en la URL
 if (isset($segmentos[2])) {
@@ -76,16 +83,15 @@ if (isset($segmentos[2])) {
 
 // 7. Mapeo de módulos a archivos físicos y nombres de clases
 $controladoresPermitidos = [
-    ''              => ['archivo' => 'Controlador_login.php', 'clase' => 'ControladorLogin'],
-    'login'         => ['archivo' => 'Controlador_login.php', 'clase' => 'ControladorLogin'],
-    'admin'         => ['archivo' => 'Controlador_admin.php', 'clase' => 'ControladorAdmin'],
-    'empleado'      => ['archivo' => 'Controlador_empleado.php', 'clase' => 'ControladorEmpleado'],
-    'recibos'       => ['archivo' => 'Controlador_recibo_pago.php', 'clase' => 'ControladorReciboPago'],
-    'utilidades'    => ['archivo' => 'Controlador_utilidades.php', 'clase' => 'ControladorUtilidades'],
-    'vacaciones'    => ['archivo' => 'Controlador_vacaciones.php', 'clase' => 'ControladorVacaciones'],
-    'prestaciones'  => ['archivo' => 'Controlador_prestaciones.php', 'clase' => 'ControladorPrestaciones'],
-    'reportes'      => ['archivo' => 'Controlador_reporte_print.php', 'clase' => 'ControladorReportePrint'],
-    'logout'        => ['archivo' => 'Controlador_logout.php', 'clase' => 'ControladorLogout']
+    ''                  => ['archivo' => 'Controlador_login.php', 'clase' => 'ControladorLogin'],
+    'login'             => ['archivo' => 'Controlador_login.php', 'clase' => 'ControladorLogin'],
+    'admin'             => ['archivo' => 'Controlador_admin.php', 'clase' => 'ControladorAdmin'],
+    'empleado'          => ['archivo' => 'Controlador_empleado.php', 'clase' => 'ControladorEmpleado'],
+    'recibos'           => ['archivo' => 'Controlador_recibo_pago.php', 'clase' => 'ControladorReciboPago'],
+    'utilidades'        => ['archivo' => 'Controlador_utilidades.php', 'clase' => 'ControladorUtilidades'],
+    'vacaciones'        => ['archivo' => 'Controlador_vacaciones.php', 'clase' => 'ControladorVacaciones'],
+    'prestaciones'      => ['archivo' => 'Controlador_prestaciones.php', 'clase' => 'ControladorPrestaciones'],
+    'reportes'          => ['archivo' => 'Controlador_reporte_print.php', 'clase' => 'ControladorReportePrint']
 ];
 
 // Si no se escribe módulo, redirigir al login
@@ -110,11 +116,11 @@ if (file_exists($archivoControlador)) {
         $instancia = new $nombreClase();
 
         if (method_exists($instancia, $accion)) {
-            // Ejecutar el método correspondiente (ej. index o procesar)
+            // Ejecutar el método correspondiente de forma limpia y segura
             $instancia->$accion();
         } else {
             http_response_code(500);
-            die("<h1>500 - Error interno</h1><p>El método '{$accion}' no existe en el controlador.</p>");
+            die("<h1>500 - Error interno</h1><p>El método '{$accion}' (original: '{$accionCruda}') no existe en el controlador {$nombreClase}.</p>");
         }
     } else {
         http_response_code(500);
